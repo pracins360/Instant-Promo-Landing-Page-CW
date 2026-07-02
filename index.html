@@ -95,108 +95,106 @@
     </div>
 
     <script>
+       <script>
         let compressedImageDataUrl = "";
-const PROMOTER_WHATSAPP = "+59995120536"; // 🇨🇼 Swap with your actual promoter WhatsApp number
+        const PROMOTER_WHATSAPP = "+59995551234"; // 🇨🇼 Change to your actual phone number
 
-// Wait for the page DOM to fully load before attaching listeners
-document.addEventListener("DOMContentLoaded", function() {
+        // Wait for the page DOM to fully load before attaching listeners
+        document.addEventListener("DOMContentLoaded", function() {
 
-    const promoTextInput = document.getElementById('promo-text');
-    const aiPromptBox = document.getElementById('ai-prompt-box');
-    const copyPromptBtn = document.getElementById('copy-prompt-btn');
-    const photoInput = document.getElementById('photo-input');
-    const uploadStatus = document.getElementById('upload-status');
-    const submitBtn = document.getElementById('submit-btn');
+            const promoTextInput = document.getElementById('promo-text');
+            const aiPromptBox = document.getElementById('ai-prompt-box');
+            const copyPromptBtn = document.getElementById('copy-prompt-btn');
+            const photoInput = document.getElementById('photo-input');
+            const uploadStatus = document.getElementById('upload-status');
+            const submitBtn = document.getElementById('submit-btn');
 
-    // IMAGE LOCAL COMPRESSION LOGIC
-    if (photoInput) {
-        photoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            uploadStatus.innerText = "⏳ Preparing layout...";
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const MAX = 700;
-                    let w = img.width, h = img.height;
-                    if (w > h ? w > MAX : h > MAX) {
-                        if (w > h) { h *= MAX / w; w = MAX; } else { w *= MAX / h; h = MAX; }
+            // IMAGE LOCAL COMPRESSION LOGIC
+            if (photoInput) {
+                photoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    uploadStatus.innerText = "⏳ Preparing layout...";
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = function(event) {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            const MAX = 700;
+                            let w = img.width, h = img.height;
+                            if (w > h ? w > MAX : h > MAX) {
+                                if (w > h) { h *= MAX / w; w = MAX; } else { w *= MAX / h; h = MAX; }
+                            }
+                            canvas.width = w; canvas.height = h;
+                            ctx.drawImage(img, 0, 0, w, h);
+                            compressedImageDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+                            uploadStatus.innerText = "✅ Image Optimized & Ready!";
+                        }
                     }
-                    canvas.width = w; canvas.height = h;
-                    ctx.drawImage(img, 0, 0, w, h);
-                    compressedImageDataUrl = canvas.toDataURL('image/jpeg', 0.65);
-                    uploadStatus.innerText = "✅ Image Optimized & Ready!";
+                });
+            }
+
+            // AI PROMPT GENERATION LOGIC
+            window.generateAiPrompt = function() {
+                const promoText = promoTextInput.value.trim() || "Special promotion offer";
+                const cleanPromo = promoText.replace(/[\r\n]+/g, " ");
+                
+                aiPromptBox.value = `Commercial food and lifestyle photography banner, high-quality modern marketing image showcasing: ${cleanPromo}. Clean minimal composition, bright professional studio lighting, depth of field, hyper-realistic, 8k, crisp details. Perfect for a local retail landing page. No text or graphic design layers in image.`;
+                copyPromptBtn.innerText = "📋 Copy AI Prompt";
+                copyPromptBtn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer";
+            };
+
+            // COPY TO CLIPBOARD LOGIC
+            window.copyPromptText = function() {
+                if (!aiPromptBox.value || aiPromptBox.value.startsWith("Fill in your Deal")) {
+                    alert("Please type a deal first to generate a professional prompt!");
+                    return;
                 }
+                aiPromptBox.select();
+                aiPromptBox.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(aiPromptBox.value)
+                    .then(() => {
+                        copyPromptBtn.innerText = "💥 COPIED! Paste into ChatGPT/Copilot.";
+                        copyPromptBtn.className = "w-full bg-purple-600 text-white text-xs font-bold py-2 rounded-lg";
+                    })
+                    .catch(() => {
+                        alert("Failed to copy automatically. Please select the text manually.");
+                    });
+            };
+
+            // AUTO-UPDATING PROMPT LOOP (Triggers as they type)
+            if (promoTextInput) {
+                promoTextInput.addEventListener('input', generateAiPrompt);
+            }
+
+            // FORM SUBMISSION & WHATSAPP REDIRECT (This is the section that went idle)
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function() {
+                    const deal = promoTextInput.value.trim();
+                    const contact = document.getElementById('contact-info').value.trim();
+                    
+                    if (!deal || !contact) {
+                        alert("Please fill out your deal and contact info first!");
+                        return;
+                    }
+
+                    // Generate dynamic key elements
+                    const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
+                    
+                    // Correct live .github.io deployment target link
+                    const reviewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}&admin=true`;
+                    
+                    // Format the payload string for WhatsApp dispatch
+                    const message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}\n\n👉 Review & Activate here: ${reviewUrl}`;
+                    
+                    // Launch window session
+                    window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+                });
             }
         });
-    }
-
-    // AI PROMPT GENERATION LOGIC
-    window.generateAiPrompt = function() {
-        const promoText = promoTextInput.value.trim() || "Special promotion offer";
-        const cleanPromo = promoText.replace(/[\r\n]+/g, " ");
-        
-        // Tailored commercial photography matrix
-        aiPromptBox.value = `Commercial food and lifestyle photography banner, high-quality modern marketing image showcasing: ${cleanPromo}. Clean minimal composition, bright professional studio lighting, depth of field, hyper-realistic, 8k, crisp details. Perfect for a local retail landing page. No text or graphic design layers in image.`;
-        copyPromptBtn.innerText = "📋 Copy AI Prompt";
-        copyPromptBtn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer";
-    };
-
-    // COPY TO CLIPBOARD LOGIC
-    window.copyPromptText = function() {
-        if (!aiPromptBox.value || aiPromptBox.value.startsWith("Fill in your Deal")) {
-            alert("Please type a deal first to generate a professional prompt!");
-            return;
-        }
-        aiPromptBox.select();
-        aiPromptBox.setSelectionRange(0, 99999); // For mobile compatibility
-        navigator.clipboard.writeText(aiPromptBox.value)
-            .then(() => {
-                copyPromptBtn.innerText = "💥 COPIED! Paste into ChatGPT/Copilot.";
-                copyPromptBtn.className = "w-full bg-purple-600 text-white text-xs font-bold py-2 rounded-lg";
-            })
-            .catch(() => {
-                alert("Failed to copy automatically. Please select the text manually.");
-            });
-    };
-
-    // AUTO-UPDATING PROMPT LOOP (Triggers as they type)
-    if (promoTextInput) {
-        promoTextInput.addEventListener('input', generateAiPrompt);
-    }
-
-    // FORM SUBMISSION & WHATSAPP REDIRECT
-    if (submitBtn) {
-        submitBtn.addEventListener('click', function() {
-            const deal = promoTextInput.value.trim();
-            const contact = document.getElementById('contact-info').value.trim();
-            
-            if(!deal || !contact) {
-                alert("Please fill out your deal and contact info first!");
-                return;
-            }
-
-            // Locate this section inside your index.html script tag and swap the domain structure:
-const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
-const deal = promoTextInput.value.trim();
-const contact = document.getElementById('contact-info').value.trim();
-
-if(!deal || !contact) {
-    alert("Please fill out your deal and contact info first!");
-    return;
-}
-
-// 🌐 CHANGED: Pointing to the live .github.io deployment pipeline instead of github.com code paths
-const reviewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}&admin=true`;
-
-const message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}\n\n👉 Review & Activate here: ${reviewUrl}`;
-
-window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
-        </script>
+    </script>
     </body>
 </html>
