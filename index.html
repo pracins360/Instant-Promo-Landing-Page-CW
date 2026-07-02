@@ -35,14 +35,14 @@
             <div class="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 space-y-4">
                 <label class="block text-xl font-bold text-gray-800">2. Your Promotion Photo 📸</label>
                 
-                <label class="flex flex-col items-center justify-center w-full h-28 border-4 border-dashed border-blue-300 rounded-xl cursor-pointer bg-white hover:bg-gray-50 text-center p-4">
+                <label id="photo-drop" class="flex flex-col items-center justify-center w-full h-28 border-4 border-dashed border-blue-300 rounded-xl cursor-pointer bg-white hover:bg-gray-50 text-center p-4">
                     <span class="text-2xl mb-1">📷</span>
                     <p class="text-sm font-bold text-gray-700">Tap to Take or Choose Photo</p>
                     <p id="upload-status" class="text-xs text-gray-400">Upload your own or use the AI helper below</p>
                     <input type="file" id="photo-input" accept="image/*" class="hidden" />
                 </label>
 
-                <!-- AI Style Helper Block from image_a2d0a7.png -->
+                <!-- AI Style Helper Block -->
                 <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-sm space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-black text-purple-700 flex items-center gap-1">✨ AI Photo Style Helper</span>
@@ -51,7 +51,7 @@
                         </button>
                     </div>
                     <p class="text-xs text-gray-500">Stuck finding a good picture? Copy this text into ChatGPT or Copilot to create a professional image instantly:</p>
-                    <textarea id="ai-prompt-box" readonly rows="3" class="w-full text-xs p-3 bg-gray-50 border border-gray-200 rounded-lg font-mono text-gray-600 focus:outline-none focus:ring-0">Fill in your Deal below, then click Generate Prompt!</textarea>
+                    <textarea id="ai-prompt-box" readonly rows="3" class="w-full text-xs p-3 bg-gray-50 border border-gray-200 rounded-lg font-mono text-gray-600 focus:outline-none focus:ring-0">Fill in your Deal above and click Generate Prompt to create a ready-to-use image prompt.</textarea>
                     <button type="button" onclick="copyPromptText()" id="copy-prompt-btn" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer">
                         📋 Copy AI Prompt
                     </button>
@@ -64,13 +64,13 @@
                     <label class="block text-xl font-bold text-gray-700">3. What is the Deal?</label>
                     <span class="bg-gray-200 text-gray-600 font-bold px-2 py-0.5 rounded-full text-xs cursor-help" title="Keep it sweet and simple!">?</span>
                 </div>
-                <textarea id="promo-text" rows="3" placeholder="Type your special offer or announcement here..." class="w-full text-lg p-4 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none font-medium text-gray-800"></textarea>
+                <textarea id="promo-text" rows="3" placeholder="Type your special offer or announcement here..." class="w-full text-lg p-4 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none"></textarea>
             </div>
 
             <!-- 4. HOW DO CUSTOMERS REACH YOU? + SOCIAL LINKS -->
             <div class="space-y-3">
                 <label class="block text-xl font-bold text-gray-700">4. How do customers reach you?</label>
-                <input type="text" id="contact-info" placeholder="Phone number, WhatsApp, or address" class="w-full text-lg p-4 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none font-medium text-gray-800">
+                <input type="text" id="contact-info" placeholder="Phone number, WhatsApp, or address" class="w-full text-lg p-4 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none" />
                 
                 <!-- Micro Social Inputs inside Section 4 to keep it minimal -->
                 <div class="grid grid-cols-2 gap-2 pt-1">
@@ -84,30 +84,37 @@
             <!-- 5. WHEN DOES THIS OFFER END? -->
             <div>
                 <label class="block text-xl font-bold text-gray-700 mb-2">5. When does this offer end?</label>
-                <input type="date" id="expiry-date" class="w-full text-lg p-4 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none font-medium text-gray-800">
+                <input type="date" id="expiry-date" class="w-full text-lg p-4 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none font-medium text-gray-800" />
             </div>
 
             <!-- SUBMIT ACTION -->
-            <button type="button" id="submit-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-2xl font-black py-5 px-4 rounded-2xl shadow-lg transform active:scale-95 transition tracking-wide cursor-pointer">
+            <button type="button" id="submit-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-2xl font-black py-5 px-4 rounded-2xl shadow-lg transform active:scale-95 transition-all">
                 🚀 MAKE ME LIVE INSTANTLY
             </button>
         </form>
     </div>
 
     <script>
-       <script>
+        // Single script block (fixed nested <script> issue)
         let compressedImageDataUrl = "";
-        const PROMOTER_WHATSAPP = "+59995551234"; // 🇨🇼 Change to your actual phone number
+        // Use international number without leading + for wa.me. Change to your actual phone number (country code + number, no plus).
+        const PROMOTER_WHATSAPP = "59995551234"; // e.g. "59995551234" for +599 9555 1234
 
-        // Wait for the page DOM to fully load before attaching listeners
         document.addEventListener("DOMContentLoaded", function() {
-
             const promoTextInput = document.getElementById('promo-text');
             const aiPromptBox = document.getElementById('ai-prompt-box');
             const copyPromptBtn = document.getElementById('copy-prompt-btn');
             const photoInput = document.getElementById('photo-input');
             const uploadStatus = document.getElementById('upload-status');
             const submitBtn = document.getElementById('submit-btn');
+            const photoDrop = document.getElementById('photo-drop');
+
+            // Make clicking the drop area open the file picker
+            if (photoDrop) {
+                photoDrop.addEventListener('click', function() {
+                    if (photoInput) photoInput.click();
+                });
+            }
 
             // IMAGE LOCAL COMPRESSION LOGIC
             if (photoInput) {
@@ -139,22 +146,23 @@
 
             // AI PROMPT GENERATION LOGIC
             window.generateAiPrompt = function() {
-                const promoText = promoTextInput.value.trim() || "Special promotion offer";
+                const promoText = (promoTextInput && promoTextInput.value.trim()) || "Special promotion offer";
                 const cleanPromo = promoText.replace(/[\r\n]+/g, " ");
-                
-                aiPromptBox.value = `Commercial food and lifestyle photography banner, high-quality modern marketing image showcasing: ${cleanPromo}. Clean minimal composition, bright professional studio lighting, depth of field, hyper-realistic, 8k, crisp details. Perfect for a local retail landing page. No text or graphic design layers in image.`;
-                copyPromptBtn.innerText = "📋 Copy AI Prompt";
-                copyPromptBtn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer";
+
+                const prompt = `Commercial food and lifestyle photography banner, high-quality modern marketing image showcasing: ${cleanPromo}. Clean minimal composition, bright professional studio lighting, shallow depth of field, warm appetizing colors, negative space for overlay text, 4k, photorealistic`;
+                if (aiPromptBox) aiPromptBox.value = prompt;
+                if (copyPromptBtn) {
+                    copyPromptBtn.innerText = "📋 Copy AI Prompt";
+                    copyPromptBtn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer";
+                }
             };
 
             // COPY TO CLIPBOARD LOGIC
             window.copyPromptText = function() {
-                if (!aiPromptBox.value || aiPromptBox.value.startsWith("Fill in your Deal")) {
+                if (!aiPromptBox || !aiPromptBox.value || aiPromptBox.value.startsWith("Fill in your Deal")) {
                     alert("Please type a deal first to generate a professional prompt!");
                     return;
                 }
-                aiPromptBox.select();
-                aiPromptBox.setSelectionRange(0, 99999);
                 navigator.clipboard.writeText(aiPromptBox.value)
                     .then(() => {
                         copyPromptBtn.innerText = "💥 COPIED! Paste into ChatGPT/Copilot.";
@@ -170,12 +178,12 @@
                 promoTextInput.addEventListener('input', generateAiPrompt);
             }
 
-            // FORM SUBMISSION & WHATSAPP REDIRECT (This is the section that went idle)
+            // FORM SUBMISSION & WHATSAPP REDIRECT
             if (submitBtn) {
                 submitBtn.addEventListener('click', function() {
-                    const deal = promoTextInput.value.trim();
-                    const contact = document.getElementById('contact-info').value.trim();
-                    
+                    const deal = (promoTextInput && promoTextInput.value.trim()) || "";
+                    const contact = (document.getElementById('contact-info') && document.getElementById('contact-info').value.trim()) || "";
+
                     if (!deal || !contact) {
                         alert("Please fill out your deal and contact info first!");
                         return;
@@ -183,15 +191,31 @@
 
                     // Generate dynamic key elements
                     const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
-                    
-                    // Correct live .github.io deployment target link
+
+                    // Live .github.io deployment target link (update if you host elsewhere)
                     const reviewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}&admin=true`;
-                    
+
+                    // Gather optional fields
+                    const fb = document.getElementById('link-fb') ? document.getElementById('link-fb').value.trim() : '';
+                    const ig = document.getElementById('link-ig') ? document.getElementById('link-ig').value.trim() : '';
+                    const tt = document.getElementById('link-tt') ? document.getElementById('link-tt').value.trim() : '';
+                    const yt = document.getElementById('link-yt') ? document.getElementById('link-yt').value.trim() : '';
+                    const expiry = document.getElementById('expiry-date') ? document.getElementById('expiry-date').value : '';
+
                     // Format the payload string for WhatsApp dispatch
-                    const message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}\n\n👉 Review & Activate here: ${reviewUrl}`;
-                    
-                    // Launch window session
-                    window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+                    let message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}`;
+                    if (expiry) message += `\n⏳ Expires: ${expiry}`;
+                    if (fb) message += `\n🔗 Facebook: ${fb}`;
+                    if (ig) message += `\n🔗 Instagram: ${ig}`;
+                    if (tt) message += `\n🔗 TikTok: ${tt}`;
+                    if (yt) message += `\n🔗 YouTube: ${yt}`;
+                    if (compressedImageDataUrl) message += `\n\n(Submission contains an image.)`;
+
+                    message += `\n\n👉 Review & Activate here: ${reviewUrl}`;
+
+                    // Open WhatsApp chat with prefilled message
+                    const waUrl = `https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`;
+                    window.open(waUrl, '_blank');
                 });
             }
         });
