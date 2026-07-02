@@ -38,24 +38,37 @@
                 </div>
             </div>
 
-            <div class="helper-container">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-xl font-bold text-gray-700">2. The Catch (Your Main Photo)</label>
-                    <button type="button" class="bg-gray-200 text-gray-700 font-bold px-3 py-1 rounded-full text-sm">?</button>
-                </div>
-                <p class="helper-text bg-blue-50 text-blue-800 p-3 rounded-xl mb-2 text-sm font-medium">
-                    💡 Tip: Take a picture of your best product, your menu, or the front of your shop!
-                </p>
-                <label class="flex flex-col items-center justify-center w-full h-40 border-4 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                        <span class="text-4xl mb-2">📸</span>
-                        <p class="text-lg font-bold text-gray-600">Tap to Take or Choose Photo</p>
-                        <p id="upload-status" class="text-xs text-gray-400 mt-1">Accepts any smartphone picture</p>
-                    </div>
-                    <input type="file" id="photo-input" accept="image/*" class="hidden" />
-                </label>
-            </div>
+            <!-- PHOTO UPLOAD & AI PROMPT ASSISTANT -->
+<div class="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 space-y-4">
+    <label class="block text-xl font-bold text-gray-800">1. Your Promotion Photo 📸</label>
+    
+    <!-- Heavy-duty drop/snap zone -->
+    <label class="flex flex-col items-center justify-center w-full h-28 border-4 border-dashed border-blue-300 rounded-xl cursor-pointer bg-white hover:bg-gray-50 text-center p-4">
+        <span class="text-2xl mb-1">📷</span>
+        <p class="text-sm font-bold text-gray-700">Tap to Take or Choose Photo</p>
+        <p id="upload-status" class="text-xs text-gray-400">Upload your own or use the AI helper below</p>
+        <input type="file" id="photo-input" accept="image/*" class="hidden" />
+    </label>
 
+    <!-- THE AI PROMPT ASSISTANT BOX -->
+    <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+            <span class="text-sm font-black text-purple-700 flex items-center gap-1">✨ AI Photo Style Helper</span>
+            <button type="button" onclick="generateAiPrompt()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1 rounded-lg cursor-pointer">
+                🔄 Generate Prompt
+            </button>
+        </div>
+        
+        <p class="text-xs text-gray-500">Stuck finding a good picture? Copy this text into ChatGPT or Copilot to create a professional image instantly:</p>
+        
+        <!-- The generated prompt displays here -->
+        <textarea id="ai-prompt-box" readonly rows="3" class="w-full text-xs p-3 bg-gray-50 border border-gray-200 rounded-lg font-mono text-gray-600 focus:outline-none focus:ring-0">Fill in your Business Name and Deal above, then click Generate Prompt!</textarea>
+        
+        <button type="button" onclick="copyPromptText()" id="copy-prompt-btn" class="w-full bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer">
+            📋 Copy AI Prompt
+        </button>
+    </div>
+</div>
             <div class="helper-container">
                 <div class="flex justify-between items-center mb-2">
                     <label class="block text-xl font-bold text-gray-700">3. What is the Deal?</label>
@@ -168,7 +181,41 @@
                 }
             }
         });
+// Add variables to track business name input if you add a name field
+function generateAiPrompt() {
+    const businessName = document.getElementById('contact-info').value || "Our Store"; // Fallback if empty
+    const promoText = document.getElementById('promo-text').value || "Special promotion offer";
+    const promptBox = document.getElementById('ai-prompt-box');
+    const copyBtn = document.getElementById('copy-prompt-btn');
 
+    // Clean up input values for clean prompt reading
+    const cleanPromo = promoText.replace(/[\r\n]+/g, " ");
+
+    // The magical formula for commercial, beautiful AI photography
+    const structuralPrompt = `Commercial lifestyle photography for "${businessName}". High-quality, vibrant, modern marketing image showcasing: ${cleanPromo}. Bright professional studio lighting, depth of field, clean composition, minimalist retail background, hyper-realistic, 8k resolution, cinematic, perfect for a business landing page banner. No text or typos in the image.`;
+
+    promptBox.value = structuralPrompt;
+    copyBtn.innerText = "📋 Copy AI Prompt";
+    copyBtn.className = "w-full bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer";
+}
+
+function copyPromptText() {
+    const promptBox = document.getElementById('ai-prompt-box');
+    const copyBtn = document.getElementById('copy-prompt-btn');
+    
+    promptBox.select();
+    promptBox.setSelectionRange(0, 99999); // For mobile devices
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(promptBox.value);
+    
+    // Quick visual confirmation
+    copyBtn.innerText = "💥 COPIED! Paste into ChatGPT now.";
+    copyBtn.className = "w-full bg-purple-600 text-white text-xs font-bold py-2 rounded-lg";
+}
+
+// Automatically update prompt when they finish typing their deal
+document.getElementById('promo-text').addEventListener('blur', generateAiPrompt);
         // GENERATE & REVEAL PREVIEW
         document.getElementById('generate-btn').addEventListener('click', function() {
             // Grab inputs
