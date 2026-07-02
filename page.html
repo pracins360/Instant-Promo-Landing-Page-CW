@@ -73,6 +73,7 @@
         const adId = urlParams.get('id');
         const isAdmin = urlParams.get('admin');
 
+        // 1. Locate the DOM loading block and update it to call the real database:
         document.addEventListener("DOMContentLoaded", function() {
             if (!adId) {
                 document.getElementById('loading-screen').innerHTML = "❌ Invalid Link (Missing ID)";
@@ -80,40 +81,60 @@
             }
 
             // Generate the fixed physical QR code for this specific ad layout
-            // This URL target remains constant forever!
-            const cleanUrl = window.location.href.split('&')[0]; // strip the admin parameters out
+            const cleanUrl = window.location.href.split('&')[0]; 
             new QRCode(document.getElementById("qrcode"), {
                 text: cleanUrl,
                 width: 120,
                 height: 120
             });
 
-            // If you opened it from the WhatsApp link, reveal your hidden floating dashboard bar
+            // Reveal hidden dashboard if admin
             if (isAdmin === 'true') {
                 document.getElementById('admin-bar').classList.remove('hidden');
             }
 
-            // SIMULATION FUNCTION: Fetches row configuration from database
-            // In a real database loop, fetch() requests the script data row matching adId
-            loadMockData(); 
+            // 🌟 CALL THE REAL LIVE SHEETS DATABASE FETCH
+            fetchLiveAdData(); 
         });
 
-        function loadMockData() {
-            document.getElementById('loading-screen').classList.add('hidden');
-            
-            // Simulating database pull state logic
-            const isRowPaid = false; // Switch to true to check active view
+        // 2. REPLACE the old mock function with this complete live data engine:
+        function fetchLiveAdData() {
+            // Call your Google Script passing a clean action request
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getAd&id=${adId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading-screen').classList.add('hidden');
 
-            if (!isRowPaid && isAdmin !== 'true') {
-                document.getElementById('pending-screen').classList.remove('hidden');
-            } else {
-                document.getElementById('main-ad-screen').classList.remove('hidden');
-                if (isRowPaid) document.getElementById('live-badge').classList.remove('hidden');
-                
-                // Fallback rendering text until real sheet fetch updates it
-                document.getElementById('ad-text').innerText = "Ad Preview: Type deal elements inside the submission manager.";
-                document.getElementById('ad-contact').innerText = "Contact Info Placeholder";
-            }
+                if (data.error) {
+                    document.getElementById('loading-screen').innerHTML = `❌ ${data.error}`;
+                    document.getElementById('loading-screen').classList.remove('hidden');
+                    return;
+                }
+
+                // Check the live Status column value from your spreadsheet row
+                if (data.Status !== 'Active' && isAdmin !== 'true') {
+                    // If it's not active and a regular customer is viewing it, show the pending card
+                    document.getElementById('pending-screen').classList.remove('hidden');
+                } else {
+                    // Otherwise, display the live promotion components!
+                    document.getElementById('main-ad-screen').classList.remove('hidden');
+                    
+                    if (data.Status === 'Active') {
+                        document.getElementById('live-badge').classList.remove('hidden');
+                    }
+
+                    // Map your spreadsheet columns directly into your HTML elements
+                    if (data.Photo_URL) document.getElementById('ad-img').src = data.Photo_URL;
+                    document.getElementById('ad-text').innerText = data.Promo_Text || "Special Offer!";
+                    document.getElementById('ad-contact').innerText = data.Contact_Info || "Contact merchant";
+                    document.getElementById('ad-date').innerText = data.Expiry_Date || "Ongoing";
+                }
+            })
+            .catch(err => {
+                // Fail-safe handler if network or configuration fails
+                document.getElementById('loading-screen').innerHTML = "❌ Connection Error. Retrying...";
+                console.error(err);
+            });
         }
 
         function activateAd() {
