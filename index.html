@@ -181,14 +181,22 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
 
-            const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
-            const reviewUrl = `https://github.com/pracins360/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}&admin=true`;
-            const message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}\n\n👉 Review & Activate here: ${reviewUrl}`;
-            
-            window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
-        });
-    }
-});
+            // Locate this section inside your index.html script tag and swap the domain structure:
+const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
+const deal = promoTextInput.value.trim();
+const contact = document.getElementById('contact-info').value.trim();
+
+if(!deal || !contact) {
+    alert("Please fill out your deal and contact info first!");
+    return;
+}
+
+// 🌐 CHANGED: Pointing to the live .github.io deployment pipeline instead of github.com code paths
+const reviewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}&admin=true`;
+
+const message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}\n\n👉 Review & Activate here: ${reviewUrl}`;
+
+window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
         </script>
     </body>
 </html>
