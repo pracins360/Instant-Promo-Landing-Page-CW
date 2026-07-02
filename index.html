@@ -179,46 +179,54 @@
             }
 
             // FORM SUBMISSION & WHATSAPP REDIRECT
+            // FORM SUBMISSION & REAL-TIME SAVE
             if (submitBtn) {
                 submitBtn.addEventListener('click', function() {
-                    const deal = (promoTextInput && promoTextInput.value.trim()) || "";
-                    const contact = (document.getElementById('contact-info') && document.getElementById('contact-info').value.trim()) || "";
-
+                    const deal = promoTextInput.value.trim();
+                    const contact = document.getElementById('contact-info').value.trim();
+                    const expiry = document.getElementById('expiry-date').value;
+                    
+                    // Simple input fields safety catch
                     if (!deal || !contact) {
                         alert("Please fill out your deal and contact info first!");
                         return;
                     }
 
+                    submitBtn.innerText = "⏳ Saving Application...";
+                    submitBtn.disabled = true;
+
                     // Generate dynamic key elements
                     const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
+                    
+                    // Gather up social profiles
+                    const socials = `FB: ${document.getElementById('link-fb').value} | IG: ${document.getElementById('link-ig').value}`;
 
-                    // Live .github.io deployment target link (update if you host elsewhere)
-                    const reviewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}&admin=true`;
+                    // GOOGLE PLUGINS INTERFACE URL
+                    // ⚠️ IMPORTANT: Make sure this variable matches your true Google script webapp string!
+                    const GOOGLE_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE"; 
 
-                    // Gather optional fields
-                    const fb = document.getElementById('link-fb') ? document.getElementById('link-fb').value.trim() : '';
-                    const ig = document.getElementById('link-ig') ? document.getElementById('link-ig').value.trim() : '';
-                    const tt = document.getElementById('link-tt') ? document.getElementById('link-tt').value.trim() : '';
-                    const yt = document.getElementById('link-yt') ? document.getElementById('link-yt').value.trim() : '';
-                    const expiry = document.getElementById('expiry-date') ? document.getElementById('expiry-date').value : '';
+                    // Construct URL parameter string to match your Sheet column sequence
+                    const uploadUrl = `${GOOGLE_SCRIPT_URL}?action=createAd&id=${uniqueId}&name=Merchant&photo=${encodeURIComponent(compressedImageDataUrl)}&text=${encodeURIComponent(deal)}&contact=${encodeURIComponent(contact)}&socials=${encodeURIComponent(socials)}&expiry=${encodeURIComponent(expiry)}`;
 
-                    // Format the payload string for WhatsApp dispatch
-                    let message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}`;
-                    if (expiry) message += `\n⏳ Expires: ${expiry}`;
-                    if (fb) message += `\n🔗 Facebook: ${fb}`;
-                    if (ig) message += `\n🔗 Instagram: ${ig}`;
-                    if (tt) message += `\n🔗 TikTok: ${tt}`;
-                    if (yt) message += `\n🔗 YouTube: ${yt}`;
-                    if (compressedImageDataUrl) message += `\n\n(Submission contains an image.)`;
-
-                    message += `\n\n👉 Review & Activate here: ${reviewUrl}`;
-
-                    // Open WhatsApp chat with prefilled message
-                    const waUrl = `https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`;
-                    window.open(waUrl, '_blank');
+                    // Fire background data transmission to Google Sheets API
+                    fetch(uploadUrl, { method: 'GET', mode: 'no-cors' })
+                    .then(() => {
+                        // After data drops successfully into your sheet, open WhatsApp
+                        const reviewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}&admin=true`;
+                        const message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}\n\n👉 Review & Activate here: ${reviewUrl}`;
+                        
+                        window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+                        
+                        submitBtn.innerText = "🚀 MAKE ME LIVE INSTANTLY";
+                        submitBtn.disabled = false;
+                    })
+                    .catch(err => {
+                        alert("Save error. Please verify your internet connection or Google Script link setup.");
+                        submitBtn.innerText = "🚀 MAKE ME LIVE INSTANTLY";
+                        submitBtn.disabled = false;
+                    });
                 });
             }
-        });
     </script>
     </body>
 </html>
