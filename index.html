@@ -96,13 +96,24 @@
 
     <script>
         let compressedImageDataUrl = "";
-        const PROMOTER_WHATSAPP = "+59995551234"; // 🇨🇼 Swap with your actual promoter WhatsApp number
+const PROMOTER_WHATSAPP = "+59995551234"; // 🇨🇼 Swap with your actual promoter WhatsApp number
 
-        // IMAGE LOCAL COMPRESSION LOGIC
-        document.getElementById('photo-input').addEventListener('change', function(e) {
+// Wait for the page DOM to fully load before attaching listeners
+document.addEventListener("DOMContentLoaded", function() {
+
+    const promoTextInput = document.getElementById('promo-text');
+    const aiPromptBox = document.getElementById('ai-prompt-box');
+    const copyPromptBtn = document.getElementById('copy-prompt-btn');
+    const photoInput = document.getElementById('photo-input');
+    const uploadStatus = document.getElementById('upload-status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // IMAGE LOCAL COMPRESSION LOGIC
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
-            document.getElementById('upload-status').innerText = "⏳ Preparing layout...";
+            uploadStatus.innerText = "⏳ Preparing layout...";
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = function(event) {
@@ -119,51 +130,65 @@
                     canvas.width = w; canvas.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
                     compressedImageDataUrl = canvas.toDataURL('image/jpeg', 0.65);
-                    document.getElementById('upload-status').innerText = "✅ Image Optimized & Ready!";
+                    uploadStatus.innerText = "✅ Image Optimized & Ready!";
                 }
             }
         });
+    }
 
-        // AI PROMPT LOGIC
-        function generateAiPrompt() {
-            const promoText = document.getElementById('promo-text').value || "Special promotion offer";
-            const cleanPromo = promoText.replace(/[\r\n]+/g, " ");
-            
-            // Tailored commercial photography matrix
-            document.getElementById('ai-prompt-box').value = `Commercial food and lifestyle photography banner, high-quality modern marketing image showcasing: ${cleanPromo}. Clean minimal composition, bright professional studio lighting, depth of field, hyper-realistic, 8k, crisp details. Perfect for a local retail landing page. No text or graphic design layers in image.`;
-            document.getElementById('copy-prompt-btn').innerText = "📋 Copy AI Prompt";
+    // AI PROMPT GENERATION LOGIC
+    window.generateAiPrompt = function() {
+        const promoText = promoTextInput.value.trim() || "Special promotion offer";
+        const cleanPromo = promoText.replace(/[\r\n]+/g, " ");
+        
+        // Tailored commercial photography matrix
+        aiPromptBox.value = `Commercial food and lifestyle photography banner, high-quality modern marketing image showcasing: ${cleanPromo}. Clean minimal composition, bright professional studio lighting, depth of field, hyper-realistic, 8k, crisp details. Perfect for a local retail landing page. No text or graphic design layers in image.`;
+        copyPromptBtn.innerText = "📋 Copy AI Prompt";
+        copyPromptBtn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-lg cursor-pointer";
+    };
+
+    // COPY TO CLIPBOARD LOGIC
+    window.copyPromptText = function() {
+        if (!aiPromptBox.value || aiPromptBox.value.startsWith("Fill in your Deal")) {
+            alert("Please type a deal first to generate a professional prompt!");
+            return;
         }
+        aiPromptBox.select();
+        aiPromptBox.setSelectionRange(0, 99999); // For mobile compatibility
+        navigator.clipboard.writeText(aiPromptBox.value)
+            .then(() => {
+                copyPromptBtn.innerText = "💥 COPIED! Paste into ChatGPT/Copilot.";
+                copyPromptBtn.className = "w-full bg-purple-600 text-white text-xs font-bold py-2 rounded-lg";
+            })
+            .catch(() => {
+                alert("Failed to copy automatically. Please select the text manually.");
+            });
+    };
 
-        function copyPromptText() {
-            const promptBox = document.getElementById('ai-prompt-box');
-            const copyBtn = document.getElementById('copy-prompt-btn');
-            promptBox.select();
-            navigator.clipboard.writeText(promptBox.value);
-            copyBtn.innerText = "💥 COPIED! Paste into ChatGPT/Copilot.";
-        }
+    // AUTO-UPDATING PROMPT LOOP (Triggers as they type)
+    if (promoTextInput) {
+        promoTextInput.addEventListener('input', generateAiPrompt);
+    }
 
-        // AUTO-UPDATING PROMPT LOOP
-        document.getElementById('promo-text').addEventListener('input', generateAiPrompt);
-
-        // FORM SUBMISSION & WHATSAPP REDIRECT
-        document.getElementById('submit-btn').addEventListener('click', function() {
-            const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
-            const deal = document.getElementById('promo-text').value;
-            const contact = document.getElementById('contact-info').value;
+    // FORM SUBMISSION & WHATSAPP REDIRECT
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function() {
+            const deal = promoTextInput.value.trim();
+            const contact = document.getElementById('contact-info').value.trim();
             
             if(!deal || !contact) {
                 alert("Please fill out your deal and contact info first!");
                 return;
             }
 
-            // Your dynamic review URL
+            const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
             const reviewUrl = `https://yourdomain.cw/page.html?id=${uniqueId}&admin=true`;
-            
-            // Formatting plain text message payload for your WhatsApp notification
             const message = `Hello Admin! 🚀 New Ad Submission for review:\n\n🆔 ID: ${uniqueId}\n📝 Deal: ${deal}\n📱 Contact: ${contact}\n\n👉 Review & Activate here: ${reviewUrl}`;
             
-            // Open direct link to you/promoter on WhatsApp
             window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+        });
+    }
+});
         </script>
     </body>
 </html>
