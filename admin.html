@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promoter Console</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans p-6 min-h-screen">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+        <h1 class="text-3xl font-black text-yellow-400">👮 Island Management Console</h1>
+
+        <div id="auth-box" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
+            <h2 class="text-lg font-bold">Promoter Authentication Required</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" id="promoter-name" placeholder="Your Name (e.g., Elton)" class="p-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm">
+                <input type="password" id="gate-pass" placeholder="Weekly Code Pass" class="p-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm">
+            </div>
+            <button onclick="loadConsole()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-black py-3 rounded-xl transition">🔑 Access Terminal Panel</button>
+        </div>
+
+        <div id="dashboard" class="hidden space-y-4">
+            <h2 class="text-xl font-bold text-gray-400">Incoming System Submissions:</h2>
+            <div id="list-container" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE";
+        const WEEKLY_PASS = "Curaçao2026"; // Change this password regularly
+
+        function loadConsole() {
+            const name = document.getElementById('promoter-name').value.trim();
+            const pass = document.getElementById('gate-pass').value;
+
+            if(!name || pass !== WEEKLY_PASS) {
+                alert("Invalid promoter credentials!");
+                return;
+            }
+
+            document.getElementById('auth-box').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            fetchRows();
+        }
+
+        function fetchRows() {
+            document.getElementById('list-container').innerHTML = "Fetching real-time rows...";
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getAll`)
+            .then(res => res.json())
+            .then(rows => {
+                let html = "";
+                rows.reverse().forEach(row => {
+                    const statusColor = row.Status === "Active" ? "bg-emerald-500 text-white" : "bg-yellow-500 text-slate-950";
+                    html += `
+                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="font-mono text-xs text-gray-400">ID: ${row.Ad_ID} | Tier: ${row.Business_Name}</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-black ${statusColor}">${row.Status}</span>
+                            </div>
+                            <p class="text-lg font-bold">"${row.Promo_Text}"</p>
+                            
+                            <div class="space-y-1">
+                                <label class="text-xs text-gray-400 font-bold">Live Image Target Link:</label>
+                                <input type="text" id="img-${row.Ad_ID}" value="${row.Photo_URL}" class="w-full p-2 bg-slate-950 border border-slate-700 text-xs rounded-lg text-blue-400">
+                            </div>
+
+                            <div class="flex gap-2 pt-2">
+                                <button onclick="updateAd('${row.Ad_ID}', 'Active')" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black py-2 rounded-xl text-sm transition">🔓 Activate</button>
+                                <button onclick="updateAd('${row.Ad_ID}', 'Removed')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition">❌ Remove</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('list-container').innerHTML = html || "No entries found.";
+            });
+        }
+
+        function updateAd(id, newStatus) {
+            const pName = document.getElementById('promoter-name').value;
+            const newImg = document.getElementById(`img-${id}`).value;
+            
+            // Build request with audit log elements (Timestamp is tracked via App Script)
+            const url = `${GOOGLE_SCRIPT_URL}?action=updateAd&id=${id}&status=${newStatus}&img=${encodeURIComponent(newImg)}&promoter=${encodeURIComponent(pName)}&token=MySuperSecretPassword123`;
+            
+            fetch(url, { method: 'GET', mode: 'no-cors' }).then(() => {
+                alert(`Row successfully shifted to ${newStatus}`);
+                fetchRows();
+            });
+        }
+    </script>
+</body>
+</html>
