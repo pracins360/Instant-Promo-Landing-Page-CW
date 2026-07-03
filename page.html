@@ -42,34 +42,60 @@
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec";
+        // ⚠️ REPLACE THIS WITH YOUR ACTUAL DEPLOYED GOOGLE WEB APP URL
+        const GOOGLE_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE"; 
+
         const urlParams = new URLSearchParams(window.location.search);
         const adId = urlParams.get('id');
+        const loadingEl = document.getElementById('loading');
 
-        if (adId) {
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 100, height: 100 });
+        // Fail-safe check: If the URL doesn't have an ID parameter, tell the user immediately
+        if (!adId) {
+            loadingEl.innerHTML = "❌ **Error: No Promotion ID Found.**<br><span class='text-xs font-normal text-gray-400'>Make sure the URL looks like: page.html?id=ad_XXXX</span>";
+        } else {
+            // Setup QR code scanner target link safely
+            try {
+                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 100, height: 100 });
+            } catch(e) {
+                console.error("QR Code generation skipped:", e);
+            }
 
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getAd&id=${adId}`)
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('loading').classList.add('hidden');
-                if (data.error) {
-                    document.getElementById('loading').innerHTML = "❌ Promotion entry missing or expired.";
-                    document.getElementById('loading').classList.remove('hidden');
-                    return;
-                }
+            // Check if the developer forgot to change the web app configuration URL
+            if (GOOGLE_SCRIPT_URL.includes("YOUR_DEPLOYED_WEB_APP_URL")) {
+                loadingEl.innerHTML = "❌ **Configuration Error.**<br><span class='text-xs font-normal text-gray-400'>You need to paste your real Google Web App link into the code.</span>";
+            } else {
+                // Fetch live row data snippet
+                fetch(`${GOOGLE_SCRIPT_URL}?action=getAd&id=${adId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Network response was not stable");
+                    return res.json();
+                })
+                .then(data => {
+                    loadingEl.classList.add('hidden');
 
-                if (data.Status !== "Active") {
-                    document.getElementById('pending-card').classList.remove('hidden');
-                } else {
-                    document.getElementById('promo-card').classList.remove('hidden');
-                    document.getElementById('ad-img').src = data.Photo_URL;
-                    document.getElementById('ad-community').innerText = `📍 Group: ${data.Social_Links}`; // we map community tag here
-                    document.getElementById('ad-text').innerText = data.Promo_Text;
-                    document.getElementById('ad-contact').innerText = data.Contact_Info;
-                    document.getElementById('ad-date').innerText = data.Expiry_Date;
-                }
-            });
+                    if (data.error) {
+                        loadingEl.innerHTML = "❌ **Promotion entry missing or expired.**";
+                        loadingEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    // Display proper card layout matching status
+                    if (data.Status !== "Active") {
+                        document.getElementById('pending-card').classList.remove('hidden');
+                    } else {
+                        document.getElementById('promo-card').classList.remove('hidden');
+                        document.getElementById('ad-img').src = data.Photo_URL || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
+                        document.getElementById('ad-community').innerText = `📍 Group: ${data.Social_Links || 'Solo'}`;
+                        document.getElementById('ad-text').innerText = data.Promo_Text;
+                        document.getElementById('ad-contact').innerText = data.Contact_Info;
+                        document.getElementById('ad-date').innerText = data.Expiry_Date || "Ongoing";
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    loadingEl.innerHTML = "❌ **Connection Timeout Error.**<br><span class='text-xs font-normal text-gray-400'>Could not sync data. Check if your Apps Script is deployed to 'Anyone'.</span>";
+                });
+            }
         }
     </script>
 </body>
