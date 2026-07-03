@@ -3,154 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Promotion Page</title>
+    <title>Promotion Details</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4">
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4 pb-20">
 
-    <!-- NO DATA / LOADING STATE -->
-    <div id="loading-screen" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center my-10">
-        <span class="text-4xl">⏳</span>
-        <h2 class="text-xl font-bold text-gray-700 mt-2">Loading Offer Details...</h2>
-    </div>
+    <div id="loading" class="text-center py-12 font-bold text-gray-500">⏳ Accessing Database Entry...</div>
 
-    <!-- PENDING AD SCREEN (For Public viewers if not paid yet) -->
-    <div id="pending-screen" class="hidden w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center my-10 border-4 border-yellow-500">
+    <div id="pending-card" class="hidden w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center border-4 border-yellow-500 my-6">
         <span class="text-5xl">⏳</span>
-        <h2 class="text-2xl font-black text-gray-800 mt-4">Offer Pending Activation</h2>
-        <p class="text-gray-500 mt-2 font-medium">This business landing page is awaiting setup confirmation.</p>
+        <h2 class="text-2xl font-black text-gray-800 mt-4">Draft Created Successfully!</h2>
+        <p class="text-gray-500 mt-2 text-sm font-medium">Your ad draft layout is secure. It will instantly go live globally as soon as the promoter clears the Sentoo verification payment.</p>
     </div>
 
-    <!-- MAIN DISPLAY SCREEN (What the customer sees) -->
-    <div id="main-ad-screen" class="hidden w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden my-4 border-2 border-gray-200">
-        
-        <div class="w-full border-b border-gray-200">
-            <img id="seasonal-banner" src="current-banner.jpg" alt="Seasonal Campaign" class="w-full h-auto object-cover">
-        </div>
+    <div id="promo-card" class="hidden w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
+        <img src="current-banner.jpg" alt="Campaign Banner" class="w-full h-auto object-cover border-b">
 
-        <div id="live-badge" class="bg-emerald-500 text-white text-center py-2 font-black tracking-widest text-xs hidden">
-            ✨ ACTIVE PROMOTION ✨
-        </div>
-        
-        <img id="ad-img" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600" alt="Promo Layout" class="w-full h-64 object-cover">
-        
         <div class="p-6 space-y-4">
-            <p id="ad-text" class="text-2xl font-extrabold text-gray-900 break-words">Loading special deal...</p>
+            <img id="ad-img" src="" class="w-full h-64 object-cover rounded-xl shadow-inner">
+            <h2 id="ad-community" class="inline-block bg-blue-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest"></h2>
+            <p id="ad-text" class="text-2xl font-extrabold text-gray-900 break-words"></p>
             
             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <p class="text-xs font-bold text-blue-400 uppercase tracking-wider">How to Claim / Order:</p>
-                <p id="ad-contact" class="text-lg font-black text-blue-700 break-words"></p>
+                <span class="text-xs font-black text-blue-500 uppercase tracking-wider block mb-1">Claim Offer via:</span>
+                <p id="ad-contact" class="text-lg font-black text-blue-800 break-words"></p>
             </div>
 
-            <div class="flex justify-between items-center text-sm font-bold bg-red-50 text-red-600 px-4 py-2 rounded-xl">
-                <span>⏳ Valid Until:</span>
-                <span id="ad-date">--/--/----</span>
+            <div class="flex justify-between items-center text-xs font-bold bg-red-50 text-red-600 p-3 rounded-xl">
+                <span>⏰ Promotion Closes:</span>
+                <span id="ad-date"></span>
             </div>
         </div>
 
-        <!-- GENERATED STATIC QR CODE FOOTER (Stays same forever) -->
-        <div class="p-6 bg-gray-50 border-t border-gray-200 flex flex-col items-center justify-center">
-            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Scan to share this deal:</p>
-            <div id="qrcode" class="p-2 bg-white rounded-xl shadow-sm border border-gray-100"></div>
+        <div class="p-4 bg-gray-50 border-t flex flex-col items-center">
+            <div id="qrcode" class="bg-white p-2 border rounded-xl shadow-sm"></div>
         </div>
-    </div>
-
-    <!-- FLOATING ADMIN CONTROL BAR (Only visible if admin=true) -->
-    <div id="admin-bar" class="hidden fixed bottom-0 left-0 right-0 bg-slate-900 text-white p-4 shadow-2xl flex flex-col items-center justify-center border-t-4 border-yellow-500 z-50">
-        <p class="text-xs font-bold uppercase tracking-wider text-yellow-400 mb-2">👮 Admin / Promoter Dashboard</p>
-        <button id="toggle-status-btn" onclick="activateAd()" class="w-full max-w-sm bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-xl shadow-md text-lg transition tracking-wide cursor-pointer">
-            🔓 CLICK TO APPROVE & ACTIVATE AD
-        </button>
     </div>
 
     <script>
-        // Paste your web app url from deployment step here
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec"; 
-        const SECRET_TOKEN = "ws146791";
-
+        const GOOGLE_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE";
         const urlParams = new URLSearchParams(window.location.search);
         const adId = urlParams.get('id');
-        const isAdmin = urlParams.get('admin');
 
-        // 1. Locate the DOM loading block and update it to call the real database:
-        document.addEventListener("DOMContentLoaded", function() {
-            if (!adId) {
-                document.getElementById('loading-screen').innerHTML = "❌ Invalid Link (Missing ID)";
-                return;
-            }
+        if (adId) {
+            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 100, height: 100 });
 
-            // Generate the fixed physical QR code for this specific ad layout
-            const cleanUrl = window.location.href.split('&')[0]; 
-            new QRCode(document.getElementById("qrcode"), {
-                text: cleanUrl,
-                width: 120,
-                height: 120
-            });
-
-            // Reveal hidden dashboard if admin
-            if (isAdmin === 'true') {
-                document.getElementById('admin-bar').classList.remove('hidden');
-            }
-
-            // 🌟 CALL THE REAL LIVE SHEETS DATABASE FETCH
-            fetchLiveAdData(); 
-        });
-
-        // 2. REPLACE the old mock function with this complete live data engine:
-        function fetchLiveAdData() {
-            // Call your Google Script passing a clean action request
             fetch(`${GOOGLE_SCRIPT_URL}?action=getAd&id=${adId}`)
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
-                document.getElementById('loading-screen').classList.add('hidden');
-
+                document.getElementById('loading').classList.add('hidden');
                 if (data.error) {
-                    document.getElementById('loading-screen').innerHTML = `❌ ${data.error}`;
-                    document.getElementById('loading-screen').classList.remove('hidden');
+                    document.getElementById('loading').innerHTML = "❌ Promotion entry missing or expired.";
+                    document.getElementById('loading').classList.remove('hidden');
                     return;
                 }
 
-                // Check the live Status column value from your spreadsheet row
-                if (data.Status !== 'Active' && isAdmin !== 'true') {
-                    // If it's not active and a regular customer is viewing it, show the pending card
-                    document.getElementById('pending-screen').classList.remove('hidden');
+                if (data.Status !== "Active") {
+                    document.getElementById('pending-card').classList.remove('hidden');
                 } else {
-                    // Otherwise, display the live promotion components!
-                    document.getElementById('main-ad-screen').classList.remove('hidden');
-                    
-                    if (data.Status === 'Active') {
-                        document.getElementById('live-badge').classList.remove('hidden');
-                    }
-
-                    // Map your spreadsheet columns directly into your HTML elements
-                    if (data.Photo_URL) document.getElementById('ad-img').src = data.Photo_URL;
-                    document.getElementById('ad-text').innerText = data.Promo_Text || "Special Offer!";
-                    document.getElementById('ad-contact').innerText = data.Contact_Info || "Contact merchant";
-                    document.getElementById('ad-date').innerText = data.Expiry_Date || "Ongoing";
+                    document.getElementById('promo-card').classList.remove('hidden');
+                    document.getElementById('ad-img').src = data.Photo_URL;
+                    document.getElementById('ad-community').innerText = `📍 Group: ${data.Social_Links}`; // we map community tag here
+                    document.getElementById('ad-text').innerText = data.Promo_Text;
+                    document.getElementById('ad-contact').innerText = data.Contact_Info;
+                    document.getElementById('ad-date').innerText = data.Expiry_Date;
                 }
-            })
-            .catch(err => {
-                // Fail-safe handler if network or configuration fails
-                document.getElementById('loading-screen').innerHTML = "❌ Connection Error. Retrying...";
-                console.error(err);
-            });
-        }
-
-        function activateAd() {
-            const btn = document.getElementById('toggle-status-btn');
-            btn.innerText = "⏳ Saving Status to Google Sheet...";
-            btn.disabled = true;
-
-            // Send actual execution payload directly to your running sheet webapp instance
-            fetch(`${GOOGLE_SCRIPT_URL}?id=${adId}&token=${SECRET_TOKEN}&status=Active`, { method: 'GET', mode: 'no-cors' })
-            .then(() => {
-                btn.innerText = "✅ AD ACTIVATED & LIVE FOR CUSTOMERS!";
-                btn.className = "w-full max-w-sm bg-blue-600 text-white font-black py-3 rounded-xl shadow-md text-lg text-center";
-            })
-            .catch(err => {
-                btn.innerText = "Error contacting sheet API";
-                btn.disabled = false;
             });
         }
     </script>
