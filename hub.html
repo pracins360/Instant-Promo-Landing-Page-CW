@@ -3,64 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Community Promo Hub</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Local Discount Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen pb-12">
+<body class="bg-gray-100 font-sans min-h-screen pb-12 text-gray-800">
 
     <header class="bg-blue-600 text-white text-center py-6 px-4 shadow-md sticky top-0 z-50">
-        <h1 class="text-3xl font-black tracking-wide">🇨🇼 Local Discount Hub</h1>
+        <h1 class="text-3xl font-black tracking-wide flex items-center justify-center gap-2">
+            🇨🇼 Local Discount Hub
+        </h1>
         <p class="text-sm text-blue-100 mt-1 font-medium">Your neighborhood alliance shared promo network</p>
     </header>
 
-    <main class="max-w-md mx-auto px-4 mt-6 space-y-6" id="hub-container">
-        <div id="hub-loading" class="text-center py-12 font-bold text-gray-500">⏳ Accessing Live Community Feed...</div>
+    <section class="max-w-md mx-auto px-4 mt-4">
+        <div class="flex gap-2 overflow-x-auto pb-2 justify-start md:justify-center scrollbar-none" id="filter-tabs">
+            <button onclick="filterRegion('ALL')" class="region-tab bg-blue-600 text-white text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider shadow-sm border border-blue-600 shrink-0 transition-all">
+                🌍 Show All
+            </button>
+            <button onclick="filterRegion('OTRABANDA')" class="region-tab bg-white text-gray-600 text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider shadow-sm border border-gray-200 shrink-0 transition-all hover:bg-gray-50">
+                🏙️ Otrabanda
+            </button>
+            <button onclick="filterRegion('PUNDA')" class="region-tab bg-white text-gray-600 text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider shadow-sm border border-gray-200 shrink-0 transition-all hover:bg-gray-50">
+                🛍️ Punda
+            </button>
+            <button onclick="filterRegion('SALINA')" class="region-tab bg-white text-gray-600 text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider shadow-sm border border-gray-200 shrink-0 transition-all hover:bg-gray-50">
+                🏬 Salina
+            </button>
+        </div>
+    </section>
+
+    <main class="max-w-md mx-auto px-4 mt-4 space-y-6" id="hub-container">
+        <div id="hub-loading" class="text-center py-12 font-bold text-gray-500 animate-pulse bg-white rounded-3xl shadow-sm border p-6">
+            ⏳ Accessing Live Community Feed...
+        </div>
     </main>
 
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec";
-
-        const container = document.getElementById('hub-container');
+        
+        let allActiveAds = []; // Global storage array for filtering
+        const container = document.getElementById('hub-container') || document.body;
         const loadingEl = document.getElementById('hub-loading');
 
+        // Fetch all rows from database
         fetch(`${GOOGLE_SCRIPT_URL}?action=getAll`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("Network response was bad.");
+            return res.json();
+        })
         .then(rows => {
-            if (loadingEl) loadingEl.classList.add('hidden');
+            if (loadingEl) loadingEl.remove();
 
             if (!rows || !Array.isArray(rows) || rows.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-500 font-bold py-12">📍 No active promotions found in the database.</div>`;
+                container.innerHTML = `<div class="text-center text-gray-500 font-bold py-12 bg-white rounded-3xl border shadow-sm">📍 No active promotions found in the database.</div>`;
                 return;
             }
 
-            // Clean, ultra-safe filtering checking both uppercase and lowercase properties
-            const activeAds = rows.filter(row => {
+            // Clean filtering checking both uppercase and lowercase properties
+            allActiveAds = rows.filter(row => {
                 const currentStatus = row.Status || row.status || "";
                 return currentStatus.toString().trim().toLowerCase() === "active";
             });
 
-            if (activeAds.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-500 font-bold py-12">📍 No active promotions in the network right now. Check back soon!</div>`;
+            if (allActiveAds.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 font-bold py-12 bg-white rounded-3xl border shadow-sm">📍 No active promotions in the network right now.</div>`;
                 return;
             }
 
-            // Render out the scrolling cards
+            // Invert array to put newest entries at the top of the timeline
+            allActiveAds.reverse();
+            
+            // Initial render of all active items
+            renderCards(allActiveAds);
+        })
+        .catch(err => {
+            console.error("Hub render crash details:", err);
+            container.innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-3xl p-6 text-center text-red-700 font-bold my-4 shadow-sm">
+                    ❌ Connection Sync Error.<br>
+                    <span class="text-xs font-normal text-red-500 block mt-1">Could not pull database rows. Clear your phone cache or refresh.</span>
+                </div>`;
+        });
+
+        // RENDER LOGIC FUNCTION
+        function renderCards(adsList) {
+            if (adsList.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 font-bold py-12 bg-white rounded-3xl border shadow-sm">📍 No active deals under this filter option.</div>`;
+                return;
+            }
+
             let cardsHtml = "";
-            activeAds.reverse().forEach(ad => {
-                // Read properties carefully matching your exact backend JSON layout keys
-                const adId = ad.Ad_ID || ad.id || "";
+            adsList.forEach(ad => {
                 const imgUrl = ad.Photo_URL || ad.photo || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
                 const promoText = ad.Promo_Text || ad.text || "Special Offer!";
                 const contactNum = ad.Contact_Info || ad.contact || "";
-                const communityTag = ad.Social_Links || ad.community || ad.Business_Name || "OTRABANDA";
-                const expiryRaw = ad.Expiry_Date || ad.expiry || "Ongoing";
                 
-                const cleanNum = contactNum.replace(/\D/g, '');
+                // Read from Social_Links where the admin dashboard saves region values
+                const communityTag = (ad.Social_Links || ad.community || "OTRABANDA").toUpperCase();
+                
+                const expiryRaw = ad.Expiry_Date || ad.expiry || "Ongoing";
+                const cleanNum = contactNum.toString().replace(/\D/g, '');
                 const displayDate = expiryRaw.includes('T') ? expiryRaw.split('T')[0] : expiryRaw;
 
                 cardsHtml += `
-                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 my-4">
-                        <div class="relative">
+                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 transition-all duration-200">
+                        <div class="relative bg-gray-100">
                             <img src="${imgUrl}" class="w-full h-64 object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'">
                             <span class="absolute top-3 left-3 bg-blue-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                                 📍 ${communityTag}
@@ -70,9 +117,9 @@
                         <div class="p-5 space-y-4">
                             <p class="text-xl font-extrabold text-gray-900 break-words">"${promoText}"</p>
                             
-                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
-                                <span class="text-xs font-black text-blue-500 uppercase">Claim Offer:</span>
-                                <a href="https://wa.me/${cleanNum}" target="_blank" class="text-md font-black text-blue-600 underline">
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between items-center">
+                                <span class="text-xs font-black text-blue-500 uppercase tracking-wider">Claim Offer via:</span>
+                                <a href="https://wa.me/${cleanNum}" target="_blank" class="text-lg font-black text-blue-600 underline tracking-wide flex items-center gap-1">
                                     💬 ${contactNum}
                                 </a>
                             </div>
@@ -86,13 +133,33 @@
             });
             
             container.innerHTML = cardsHtml;
-        })
-        .catch(err => {
-            console.error("Hub render error:", err);
-            if (loadingEl) {
-                loadingEl.innerHTML = `<span class="text-red-500 font-bold">❌ Connection Error. could not read spreadsheet rows.</span>`;
+        }
+
+        // REGION FILTER CONTROLLER ENGINE
+        function filterRegion(selectedRegion) {
+            // Update button tab highlights visually
+            const tabs = document.querySelectorAll('.region-tab');
+            tabs.forEach(tab => {
+                if (tab.innerText.toUpperCase().includes(selectedRegion)) {
+                    tab.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                    tab.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                } else {
+                    tab.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    tab.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+                }
+            });
+
+            // Run conditional matching logic
+            if (selectedRegion === 'ALL') {
+                renderCards(allActiveAds);
+            } else {
+                const filtered = allActiveAds.filter(ad => {
+                    const tag = (ad.Social_Links || ad.community || "").toUpperCase();
+                    return tag.includes(selectedRegion);
+                });
+                renderCards(filtered);
             }
-        });
+        }
     </script>
 </body>
 </html>
