@@ -36,10 +36,9 @@
             <h2 id="ad-community" class="inline-block bg-blue-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest"></h2>
             <p id="ad-text" class="text-2xl font-extrabold text-gray-900 break-words"></p>
             
-            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <span class="text-xs font-black text-blue-500 uppercase tracking-wider block mb-1">Claim Offer via:</span>
-                <p id="ad-contact" class="text-lg font-black text-blue-800 break-words"></p>
-            </div>
+           const contactNum = data.Contact_Info || "";
+const cleanNum = contactNum.replace(/\D/g, ''); // Removes any spaces or dashes
+document.getElementById('ad-contact').innerHTML = `<a href="https://wa.me/${cleanNum}" target="_blank" class="text-blue-600 font-bold underline">${contactNum}</a>`;
 
             <div class="flex justify-between items-center text-xs font-bold bg-red-50 text-red-600 p-3 rounded-xl">
                 <span>⏰ Promotion Closes:</span>
@@ -124,8 +123,11 @@
                     document.getElementById('ad-community').innerText = `📍 Group: ${data.Social_Links || 'Solo'}`;
                     document.getElementById('ad-text').innerText = data.Promo_Text || "Special offer!";
                     document.getElementById('ad-contact').innerText = data.Contact_Info || "Contact us";
-                    document.getElementById('ad-date').innerText = data.Expiry_Date || "Ongoing";
-                }
+if (data.Expiry_Date && data.Expiry_Date.includes('T')) {
+    document.getElementById('ad-date').innerText = data.Expiry_Date.split('T')[0];
+} else {
+    document.getElementById('ad-date').innerText = data.Expiry_Date || "Ongoing";
+}                }
             })
             .catch(err => {
                 console.error("Network Fetch Failure:", err);
