@@ -20,38 +20,55 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec";
 
-        // Fetch all rows from database
+        const container = document.getElementById('hub-container');
+        const loadingEl = document.getElementById('hub-loading');
+
         fetch(`${GOOGLE_SCRIPT_URL}?action=getAll`)
         .then(res => res.json())
         .then(rows => {
-            const container = document.getElementById('hub-container');
-            document.getElementById('hub-loading').classList.add('hidden');
+            if (loadingEl) loadingEl.classList.add('hidden');
 
-            // Filter out only completely "Active" promos to display to the public
-            const activeAds = rows.filter(row => row.Status === "Active");
+            if (!rows || !Array.isArray(rows) || rows.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 font-bold py-12">📍 No active promotions found in the database.</div>`;
+                return;
+            }
+
+            // Clean, ultra-safe filtering checking both uppercase and lowercase properties
+            const activeAds = rows.filter(row => {
+                const currentStatus = row.Status || row.status || "";
+                return currentStatus.toString().trim().toLowerCase() === "active";
+            });
 
             if (activeAds.length === 0) {
                 container.innerHTML = `<div class="text-center text-gray-500 font-bold py-12">📍 No active promotions in the network right now. Check back soon!</div>`;
                 return;
             }
 
-            // Loop through and build vertical scrollable list cards
+            // Render out the scrolling cards
+            let cardsHtml = "";
             activeAds.reverse().forEach(ad => {
-                const contactNum = ad.Contact_Info || "";
+                // Read properties carefully matching your exact backend JSON layout keys
+                const adId = ad.Ad_ID || ad.id || "";
+                const imgUrl = ad.Photo_URL || ad.photo || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
+                const promoText = ad.Promo_Text || ad.text || "Special Offer!";
+                const contactNum = ad.Contact_Info || ad.contact || "";
+                const communityTag = ad.Social_Links || ad.community || ad.Business_Name || "OTRABANDA";
+                const expiryRaw = ad.Expiry_Date || ad.expiry || "Ongoing";
+                
                 const cleanNum = contactNum.replace(/\D/g, '');
-                const communityTag = ad.Social_Links || ad.Business_Name || "Solo";
+                const displayDate = expiryRaw.includes('T') ? expiryRaw.split('T')[0] : expiryRaw;
 
-                const cardHtml = `
-                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 transition-transform duration-200 hover:scale-[1.01]">
+                cardsHtml += `
+                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 my-4">
                         <div class="relative">
-                            <img src="${ad.Photo_URL || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" class="w-full h-64 object-cover">
+                            <img src="${imgUrl}" class="w-full h-64 object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'">
                             <span class="absolute top-3 left-3 bg-blue-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                                 📍 ${communityTag}
                             </span>
                         </div>
 
                         <div class="p-5 space-y-4">
-                            <p class="text-xl font-extrabold text-gray-900 break-words">"${ad.Promo_Text}"</p>
+                            <p class="text-xl font-extrabold text-gray-900 break-words">"${promoText}"</p>
                             
                             <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
                                 <span class="text-xs font-black text-blue-500 uppercase">Claim Offer:</span>
@@ -61,17 +78,20 @@
                             </div>
 
                             <div class="text-[11px] font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-lg inline-block">
-                                ⏰ Valid Until: ${ad.Expiry_Date ? ad.Expiry_Date.split('T')[0] : 'Ongoing'}
+                                ⏰ Valid Until: ${displayDate}
                             </div>
                         </div>
                     </div>
                 `;
-                container.innerHTML += cardHtml;
             });
+            
+            container.innerHTML = cardsHtml;
         })
         .catch(err => {
-            console.error(err);
-            document.getElementById('hub-loading').innerText = "❌ Failed to load community feed. Please refresh.";
+            console.error("Hub render error:", err);
+            if (loadingEl) {
+                loadingEl.innerHTML = `<span class="text-red-500 font-bold">❌ Connection Error. could not read spreadsheet rows.</span>`;
+            }
         });
     </script>
 </body>
