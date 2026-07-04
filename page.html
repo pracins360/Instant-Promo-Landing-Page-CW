@@ -6,6 +6,19 @@
     <title>Promotion Details</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .retry-btn {
+            background: #ffcd3c;
+            color: #002b54;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .retry-btn:hover { background: #ffdd77; }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4 pb-20">
 
@@ -18,8 +31,6 @@
     </div>
 
     <div id="promo-card" class="hidden w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
-        <img src="current-banner.jpg" alt="Campaign Banner" class="w-full h-auto object-cover border-b">
-
         <div class="p-6 space-y-4">
             <img id="ad-img" src="" class="w-full h-64 object-cover rounded-xl shadow-inner">
             <h2 id="ad-community" class="inline-block bg-blue-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest"></h2>
@@ -41,57 +52,105 @@
         </div>
     </div>
 
+    <div id="error-card" class="hidden w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center border-4 border-red-500 my-6">
+        <span class="text-5xl">⚠️</span>
+        <h2 class="text-2xl font-black text-red-600 mt-4">Connection Error</h2>
+        <p class="text-gray-600 mt-2 text-sm font-medium" id="error-message">Could not load promotion data.</p>
+        <button class="retry-btn" onclick="retryLoad()">🔄 Try Again</button>
+        <p class="text-xs text-gray-400 mt-4">If this persists, contact support at +599 9512 0536</p>
+    </div>
+
     <script>
-        // 🌐 LIVE GOOGLE USER PIPELINE DATABASE URL (Cleaned of trailing comments)
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec";
+        const MAX_RETRIES = 3;
+        let retryCount = 0;
+        let currentAdId = null;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const adId = urlParams.get('id');
-        const loadingEl = document.getElementById('loading');
+        function loadAdData(retry = true) {
+            const loadingEl = document.getElementById('loading');
+            const errorCard = document.getElementById('error-card');
+            const pendingCard = document.getElementById('pending-card');
+            const promoCard = document.getElementById('promo-card');
+            
+            // Hide all cards, show loading
+            loadingEl.classList.remove('hidden');
+            errorCard.classList.add('hidden');
+            pendingCard.classList.add('hidden');
+            promoCard.classList.add('hidden');
 
-        // Check 1: Ensure an ID was passed in the link string parameter
-        if (!adId) {
-            loadingEl.innerHTML = "❌ **Error: No Promotion ID Found.**<br><span class='text-xs font-normal text-gray-400'>Make sure the URL looks like: page.html?id=ad_XXXX</span>";
-        } else {
-            // Safe initialization block for QR matrix generator
-            try {
-                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 100, height: 100 });
-            } catch(e) {
-                console.error("QR rendering caught an exception:", e);
+            const urlParams = new URLSearchParams(window.location.search);
+            const adId = urlParams.get('id');
+            currentAdId = adId;
+
+            if (!adId) {
+                loadingEl.innerHTML = "❌ **Error: No Promotion ID Found.**<br><span class='text-xs font-normal text-gray-400'>Make sure the URL looks like: page.html?id=ad_XXXX</span>";
+                return;
             }
 
-            // Direct execution call to your live Google macro endpoint
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getAd&id=${adId}`)
+            // Try to generate QR code
+            try {
+                const qrContainer = document.getElementById("qrcode");
+                if (qrContainer) {
+                    new QRCode(qrContainer, { text: window.location.href, width: 100, height: 100 });
+                }
+            } catch(e) {
+                console.warn("QR rendering issue:", e);
+            }
+
+            const fetchUrl = `${GOOGLE_SCRIPT_URL}?action=getAd&id=${encodeURIComponent(adId)}&t=${Date.now()}`;
+            console.log("📡 Fetching:", fetchUrl);
+
+            fetch(fetchUrl)
             .then(res => {
-                if (!res.ok) throw new Error("Database server rejected request frame.");
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
                 return res.json();
             })
             .then(data => {
                 loadingEl.classList.add('hidden');
 
                 if (data.error) {
-                    loadingEl.innerHTML = "❌ **Promotion entry missing or expired inside database row.**";
-                    loadingEl.classList.remove('hidden');
+                    errorCard.classList.remove('hidden');
+                    document.getElementById('error-message').textContent = data.error;
                     return;
                 }
 
-                // Split display depending on whether promoter toggle status is Active
                 if (data.Status !== "Active") {
-                    document.getElementById('pending-card').classList.remove('hidden');
+                    pendingCard.classList.remove('hidden');
                 } else {
-                    document.getElementById('promo-card').classList.remove('hidden');
+                    promoCard.classList.remove('hidden');
                     document.getElementById('ad-img').src = data.Photo_URL || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
                     document.getElementById('ad-community').innerText = `📍 Group: ${data.Social_Links || 'Solo'}`;
-                    document.getElementById('ad-text').innerText = data.Promo_Text;
-                    document.getElementById('ad-contact').innerText = data.Contact_Info;
+                    document.getElementById('ad-text').innerText = data.Promo_Text || "Special offer!";
+                    document.getElementById('ad-contact').innerText = data.Contact_Info || "Contact us";
                     document.getElementById('ad-date').innerText = data.Expiry_Date || "Ongoing";
                 }
             })
             .catch(err => {
                 console.error("Network Fetch Failure:", err);
-                loadingEl.innerHTML = "❌ **Connection Timeout Error.**<br><span class='text-xs font-normal text-gray-400'>Could not pull database row. Refresh the window or contact your system admin.</span>";
+                loadingEl.classList.add('hidden');
+                
+                if (retry && retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    console.log(`🔄 Retry ${retryCount}/${MAX_RETRIES}...`);
+                    setTimeout(() => loadAdData(retry), 2000);
+                } else {
+                    errorCard.classList.remove('hidden');
+                    document.getElementById('error-message').textContent = "Connection timed out. Please check your internet connection and try again.";
+                }
             });
         }
+
+        function retryLoad() {
+            retryCount = 0;
+            loadAdData(true);
+        }
+
+        // Run when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAdData(true);
+        });
     </script>
 </body>
 </html>
