@@ -10,50 +10,51 @@
 
     <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl p-6 my-4 border-4 border-blue-500">
         <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-1">🚀 Launch Your Promo</h1>
-        <p class="text-center text-sm text-gray-500 mb-6">Simple, text-only submission for maximum speed.</p>
+        <p class="text-center text-sm text-gray-500 mb-6">Closed-Community Alliance Sales Portal</p>
 
         <form id="promo-form" class="space-y-5">
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Select Tier</label>
                     <select id="tier" class="w-full p-3 border-2 border-gray-300 rounded-xl font-bold bg-white">
-                        <option value="basic">⭐ Basic (1 Photo - 2 AI requests/wk)</option>
-                        <option value="gold">👑 Gold (2 Photos - 3 AI requests/wk)</option>
+                        <option value="basic">⭐ Basic (1 Photo)</option>
+                        <option value="gold">👑 Gold (2 Photos)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Target Community</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Community Target</label>
                     <select id="community" class="w-full p-3 border-2 border-gray-300 rounded-xl font-bold bg-white">
-                        <option value="solo">🌐 Go Solo (Independent Page)</option>
-                        <option value="punda">🏙️ Punda.com</option>
-                        <option value="salina">🛍️ Salina.com</option>
-                                                <option value="otrabanda">🛍️ Otrabanda.com</option>
-                        <option value="sambil">🏬 Sambil.com</option>
+                        <option value="OTRABANDA">🏙️ Otrabanda</option>
+                        <option value="PUNDA">🏙️ Punda.com</option>
+                        <option value="SALINA">🛍️ Salina.com</option>
+                        <option value="SAMBIL">🏬 Sambil.com</option>
                     </select>
                 </div>
             </div>
 
             <div>
                 <label class="block text-lg font-bold text-gray-700 mb-1">What is the Deal?</label>
-                <textarea id="promo-text" rows="3" placeholder="Example: 20% Off all lunch platters today only!" class="w-full p-4 border-2 border-gray-300 rounded-xl text-lg font-medium" required></textarea>
+                <textarea id="promo-text" rows="3" placeholder="Example: 20% Off all luxury bags today only!" class="w-full p-4 border-2 border-gray-300 rounded-xl text-lg font-medium" required></textarea>
             </div>
 
-            <div class="bg-purple-50 p-4 rounded-2xl border border-purple-200 space-y-2">
-                <span class="text-xs font-black text-purple-700 uppercase tracking-wider">✨ AI Prompt Assistant</span>
-                <p class="text-xs text-gray-600">Copy this prompt into ChatGPT or Copilot to design a beautiful presentation photo:</p>
-                <textarea id="ai-prompt-box" readonly rows="2" class="w-full text-xs p-2 bg-white border border-purple-200 rounded-lg text-gray-500 font-mono">Type your deal description above...</textarea>
-                <button type="button" onclick="copyPrompt()" id="copy-btn" class="w-full bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold py-2 rounded-lg transition">📋 Copy Prompt Text</button>
-            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <span class="text-xs font-black text-slate-700 uppercase tracking-wider block">📸 Product Presentation Photo</span>
+                
+                <div>
+                    <label class="block text-xs text-gray-500 font-bold mb-1">Option A: Upload real item snapshot from your shop floor</label>
+                    <input type="file" id="real-photo" accept="image/*" class="w-full text-xs text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
 
-            <div>
-                <label class="block text-lg font-bold text-gray-700 mb-1">Image URL</label>
-                <input type="url" id="photo-url" placeholder="Paste your generated AI image link here, or leave blank for Admin to upload" class="w-full p-4 border-2 border-gray-300 rounded-xl text-sm font-medium">
+                <div class="border-t border-gray-200 pt-2">
+                    <label class="block text-xs text-gray-500 font-bold mb-1">Option B: Let Admin design using AI prompt quota instead</label>
+                    <textarea id="ai-prompt-box" readonly rows="2" class="w-full text-[11px] p-2 bg-white border rounded-lg text-gray-400 font-mono">Type your deal description above to build prompt...</textarea>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Contact / Order Info</label>
-                    <input type="text" id="contact-info" placeholder="WhatsApp or phone link" class="w-full p-3 border-2 border-gray-300 rounded-xl text-sm" required>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Contact / WhatsApp Info</label>
+                    <input type="text" id="contact-info" placeholder="e.g., 59995120536" class="w-full p-3 border-2 border-gray-300 rounded-xl text-sm" required>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Offer Expiry Date</label>
@@ -62,59 +63,60 @@
             </div>
 
             <button type="button" id="submit-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xl font-black py-4 rounded-xl shadow-md transition">
-                🚀 PUSH TO PREVIEW & SUBMIT
+                🚀 PUSH TO PIPELINE
             </button>
         </form>
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec";
-const PROMOTER_WHATSAPP = "59995120536";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec"; 
+        const PROMOTER_WHATSAPP = "59995120536";
 
         const promoTextInput = document.getElementById('promo-text');
         const aiPromptBox = document.getElementById('ai-prompt-box');
-        const copyBtn = document.getElementById('copy-btn');
 
-        // Dynamic prompt builder
+        // Dynamically track prompt updates
         promoTextInput.addEventListener('input', function() {
             const val = promoTextInput.value.trim() || "Special offer";
-            aiPromptBox.value = `Commercial professional photography for retail advertisement showcasing: ${val.replace(/[\r\n]+/g, " ")}. Bright professional lighting, high-end production, minimalist background, 8k resolution, no text layers.`;
+            aiPromptBox.value = `Commercial product photography for retail ad showcasing: ${val.replace(/[\r\n]+/g, " ")}. Studio light background, 8k resolution.`;
         });
-
-        function copyPrompt() {
-            aiPromptBox.select();
-            navigator.clipboard.writeText(aiPromptBox.value);
-            copyBtn.innerText = "💥 Copied! Paste in ChatGPT";
-            setTimeout(() => { copyBtn.innerText = "📋 Copy Prompt Text"; }, 2000);
-        }
 
         document.getElementById('submit-btn').addEventListener('click', function() {
             const deal = promoTextInput.value.trim();
             const contact = document.getElementById('contact-info').value.trim();
             const expiry = document.getElementById('expiry-date').value;
-            const photo = document.getElementById('photo-url').value.trim() || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
             const tier = document.getElementById('tier').value;
             const community = document.getElementById('community').value;
+            const fileInput = document.getElementById('real-photo');
 
             if (!deal || !contact || !expiry) {
-                alert("Please complete all fields!");
+                alert("Please fill out all merchant layout spaces!");
                 return;
             }
 
             const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
-            const uploadUrl = `${GOOGLE_SCRIPT_URL}?action=createAd&id=${uniqueId}&photo=${encodeURIComponent(photo)}&text=${encodeURIComponent(deal)}&contact=${encodeURIComponent(contact)}&expiry=${encodeURIComponent(expiry)}&tier=${tier}&community=${community}`;
+            
+            // Check if they uploaded a real image item reference file
+            let photoNote = "None (Use AI Generator prompt)";
+            if(fileInput.files.length > 0) {
+                photoNote = `📸 ATTACHED REAL PRODUCT IMAGE: "${fileInput.files[0].name}"`;
+            }
 
-            document.getElementById('submit-btn').innerText = "⏳ Directing To Pipeline...";
+            // Fire off background save text string request packet
+            const uploadUrl = `${GOOGLE_SCRIPT_URL}?action=createAd&id=${uniqueId}&tier=${tier}&text=${encodeURIComponent(deal)}&contact=${encodeURIComponent(contact)}&community=${community}&expiry=${expiry}`;
+            
+            document.getElementById('submit-btn').innerText = "⏳ Dispatching Row Data...";
 
             fetch(uploadUrl, { method: 'GET', mode: 'no-cors' })
             .then(() => {
-                // Instantly open the public page in preview mode
                 const previewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}`;
-                const waMessage = `Hello Admin! 🚀 New Ad Request:\n\n🆔 ID: ${uniqueId}\n👑 Tier: ${tier}\n🏙️ Group: ${community}\n📝 Offer: ${deal}\n\n👉 Review Draft Here: ${previewUrl}`;
                 
-                // Route to WhatsApp
+                // Build a crystal-clear message string for your WhatsApp inbox
+                const waMessage = `Hello Admin! 🚀 New Ad Submission Request:\n\n🆔 ID: ${uniqueId}\n👑 Tier: ${tier.toUpperCase()}\n📍 Group Alliance: ${community}\n📝 Deal text: "${deal}"\n🖼️ Photo Source: ${photoNote}\n✨ AI Backup Prompt: ${aiPromptBox.value}\n\n👉 Live Preview Link: ${previewUrl}`;
+                
+                // Open WhatsApp natively
                 window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(waMessage)}`, '_blank');
-                window.location.href = previewUrl; // Send user straight to look at their live preview card
+                window.location.href = previewUrl;
             });
         });
     </script>
