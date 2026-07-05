@@ -8,7 +8,14 @@
 </head>
 <body class="bg-gray-100 font-sans p-4 min-h-screen flex flex-col items-center">
 
-    <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl p-6 my-4 border-4 border-blue-500">
+    <div class="w-full max-w-xl bg-slate-800 text-white text-xs font-bold rounded-xl p-2 mb-4 flex justify-between px-4">
+        <span>Owner Portal</span>
+        <div class="space-x-3">
+            <a href="hub.html" class="text-blue-400 underline">🏠 View Live Hub</a>
+        </div>
+    </div>
+
+    <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl p-6 border-4 border-blue-500">
         <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-1">🚀 Launch Your Promo</h1>
         <p class="text-center text-sm text-gray-500 mb-6">Closed-Community Alliance Sales Portal</p>
 
@@ -33,21 +40,21 @@
             </div>
 
             <div>
-                <label class="block text-lg font-bold text-gray-700 mb-1">What is the Deal?</label>
-                <textarea id="promo-text" rows="3" placeholder="Example: 20% Off all luxury bags today only!" class="w-full p-4 border-2 border-gray-300 rounded-xl text-lg font-medium" required></textarea>
+                <label class="block text-lg font-bold text-gray-700 mb-1">What is the Deal? (Text on Flyer)</label>
+                <textarea id="promo-text" rows="2" placeholder="e.g., Bucket of Brasa for only 25 ANG!" class="w-full p-4 border-2 border-gray-300 rounded-xl text-lg font-medium" required></textarea>
             </div>
 
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                <span class="text-xs font-black text-slate-700 uppercase tracking-wider block">📸 Product Presentation Photo</span>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                <span class="text-xs font-black text-slate-700 uppercase tracking-wider block">📸 Image & Creative Direction</span>
                 
                 <div>
-                    <label class="block text-xs text-gray-500 font-bold mb-1">Option A: Upload real item snapshot from your shop floor</label>
+                    <label class="block text-xs text-gray-500 font-bold mb-1">Step 1: Upload raw photo of your product (Optional)</label>
                     <input type="file" id="real-photo" accept="image/*" class="w-full text-xs text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
 
-                <div class="border-t border-gray-200 pt-2">
-                    <label class="block text-xs text-gray-500 font-bold mb-1">Option B: Let Admin design using AI prompt quota instead</label>
-                    <textarea id="ai-prompt-box" readonly rows="2" class="w-full text-[11px] p-2 bg-white border rounded-lg text-gray-400 font-mono">Type your deal description above to build prompt...</textarea>
+                <div>
+                    <label class="block text-xs text-gray-600 font-black mb-1">Step 2: Tell Admin how you want the background/style to look:</label>
+                    <textarea id="design-notes" rows="2" placeholder="e.g., Use a premium BlueWave Flag Day beach background with confetti!" class="w-full p-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-800"></textarea>
                 </div>
             </div>
 
@@ -72,37 +79,30 @@
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXYdojCYrzDOQo8B8zsZ5_vLo7c-Afxo9ddIS-J8XHcM9HkOqJuNZvLgOYdkZTiGnb/exec"; 
         const PROMOTER_WHATSAPP = "59995120536";
 
-        const promoTextInput = document.getElementById('promo-text');
-        const aiPromptBox = document.getElementById('ai-prompt-box');
-
-        // Dynamically track prompt updates
-        promoTextInput.addEventListener('input', function() {
-            const val = promoTextInput.value.trim() || "Special offer";
-            aiPromptBox.value = `Commercial product photography for retail ad showcasing: ${val.replace(/[\r\n]+/g, " ")}. Studio light background, 8k resolution.`;
-        });
-
         document.getElementById('submit-btn').addEventListener('click', function() {
-            const deal = promoTextInput.value.trim();
+            const deal = document.getElementById('promo-text').value.trim();
             const contact = document.getElementById('contact-info').value.trim();
             const expiry = document.getElementById('expiry-date').value;
             const tier = document.getElementById('tier').value;
             const community = document.getElementById('community').value;
+            const designNotes = document.getElementById('design-notes').value.trim() || "Clean presentation backdrop.";
             const fileInput = document.getElementById('real-photo');
 
             if (!deal || !contact || !expiry) {
-                alert("Please fill out all merchant layout spaces!");
+                alert("Please fill out all mandatory spaces!");
                 return;
             }
 
             const uniqueId = "ad_" + Math.floor(1000 + Math.random() * 9000);
             
-            // Check if they uploaded a real image item reference file
-            let photoNote = "None (Use AI Generator prompt)";
+            let photoNote = "None (Generate completely with AI)";
             if(fileInput.files.length > 0) {
-                photoNote = `📸 ATTACHED REAL PRODUCT IMAGE: "${fileInput.files[0].name}"`;
+                photoNote = `Attached raw photo file: "${fileInput.files[0].name}"`;
             }
 
-            // Fire off background save text string request packet
+            // Build structural dynamic AI prompt text behind the scenes
+            const structuralPrompt = `Commercial product retail graphic featuring customer item. Context: ${deal}. Background/Theme requirements: ${designNotes}. Studio lighting, clean lines, ultra-realistic 8k resolution.`;
+
             const uploadUrl = `${GOOGLE_SCRIPT_URL}?action=createAd&id=${uniqueId}&tier=${tier}&text=${encodeURIComponent(deal)}&contact=${encodeURIComponent(contact)}&community=${community}&expiry=${expiry}`;
             
             document.getElementById('submit-btn').innerText = "⏳ Dispatching Row Data...";
@@ -111,10 +111,9 @@
             .then(() => {
                 const previewUrl = `https://pracins360.github.io/Instant-Promo-Landing-Page-CW/page.html?id=${uniqueId}`;
                 
-                // Build a crystal-clear message string for your WhatsApp inbox
-                const waMessage = `Hello Admin! 🚀 New Ad Submission Request:\n\n🆔 ID: ${uniqueId}\n👑 Tier: ${tier.toUpperCase()}\n📍 Group Alliance: ${community}\n📝 Deal text: "${deal}"\n🖼️ Photo Source: ${photoNote}\n✨ AI Backup Prompt: ${aiPromptBox.value}\n\n👉 Live Preview Link: ${previewUrl}`;
+                // Perfect design dispatch package straight to your WhatsApp line!
+                const waMessage = `Hello Admin! 🚀 New Ad Request:\n\n🆔 ID: ${uniqueId}\n👑 Tier: ${tier.toUpperCase()}\n📍 Group: ${community}\n📝 Text on Ad: "${deal}"\n🖼️ Photo Source: ${photoNote}\n🎨 Creative Backdrop Notes: "${designNotes}"\n\n✨ AI Engine Prompt:\n${structuralPrompt}\n\n👉 Live View Link: ${previewUrl}`;
                 
-                // Open WhatsApp natively
                 window.open(`https://wa.me/${PROMOTER_WHATSAPP}?text=${encodeURIComponent(waMessage)}`, '_blank');
                 window.location.href = previewUrl;
             });
